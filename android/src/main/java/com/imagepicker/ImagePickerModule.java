@@ -104,7 +104,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       if (!permissionsGranted)
       {
         Activity activity = getActivity();
-        final Boolean shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+        final Boolean shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) &&
           ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
 
         // User denied the permission, allow the app to show it again later.
