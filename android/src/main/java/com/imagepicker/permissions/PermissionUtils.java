@@ -24,24 +24,32 @@ public class PermissionUtils
                                                          @NonNull final ReadableMap options,
                                                          @NonNull final OnExplainingPermissionCallback callback)
     {
+        return PermissionUtils.explainingDialog(module, options, false, callback);
+    }
+
+    public static @Nullable AlertDialog explainingDialog(@NonNull final ImagePickerModule module,
+                                                         @NonNull final ReadableMap options,
+                                                         @NonNull final boolean permissionBlocked,
+                                                         @NonNull final OnExplainingPermissionCallback callback)
+    {
         if (module.getContext() == null)
         {
             return null;
         }
-        if (!options.hasKey("permissionDenied"))
+        if (!options.hasKey("permissionDenied") || !options.hasKey("permissionBlocked"))
         {
             return null;
         }
-        final ReadableMap permissionDenied = options.getMap("permissionDenied");
-        if (((ReadableNativeMap) permissionDenied).toHashMap().size()  == 0)
+        final ReadableMap permissionObject = permissionBlocked ? options.getMap("permissionBlocked"): options.getMap("permissionDenied");
+        if (((ReadableNativeMap) permissionObject).toHashMap().size()  == 0)
         {
             return null;
         }
 
-        final String title = permissionDenied.getString("title");
-        final String text = permissionDenied.getString("text");
-        final String btnReTryTitle = permissionDenied.getString("reTryTitle");
-        final String btnOkTitle = permissionDenied.getString("okTitle");
+        final String title = permissionObject.getString("title");
+        final String text = permissionObject.getString("text");
+        final String btnReTryTitle = permissionObject.getString("reTryTitle");
+        final String btnOkTitle = permissionObject.getString("okTitle");
         final WeakReference<ImagePickerModule> reference = new WeakReference<>(module);
 
         final Activity activity = module.getActivity();

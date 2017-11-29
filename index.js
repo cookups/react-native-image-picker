@@ -15,6 +15,12 @@ const DEFAULT_OPTIONS = {
     text: 'To be able to take pictures with your camera and choose images from your library.',
     reTryTitle: 're-try',
     okTitle: 'I\'m sure',
+  },
+  permissionBlocked: {
+    title: 'Permission Required',
+    text: 'To be able to take pictures with your camera and choose images from your library.',
+    reTryTitle: 'App Settings',
+    okTitle: 'Not Now',
   }
 };
 

@@ -114,7 +114,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         }
 
         // User selected don't ask again checkbox, so dialog to redirect user to the app permissions settings.
-        final AlertDialog dialog = PermissionUtils.explainingDialog(ImagePickerModule.this, options, new PermissionUtils.OnExplainingPermissionCallback()
+        final AlertDialog dialog = PermissionUtils.explainingDialog(ImagePickerModule.this, options, true, new PermissionUtils.OnExplainingPermissionCallback()
           {
             @Override
             public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
