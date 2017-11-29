@@ -89,23 +89,33 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
                                               @NonNull final String[] permissions,
                                               @NonNull final int[] grantResults)
     {
-      boolean permissionsGranted = true;
-      for (int i = 0; i < permissions.length; i++)
-      {
-        final boolean granted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
-        permissionsGranted = permissionsGranted && granted;
-      }
-
       if (callback == null || options == null)
       {
         return false;
       }
 
+      int writePermission = PackageManager.PERMISSION_GRANTED;
+      int cameraPermission = PackageManager.PERMISSION_GRANTED;
+
+      for (int i = 0; i < permissions.length; i++)
+      {
+        if (permissions[i].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        {
+          writePermission = grantResults[i];
+        }
+        else if (permissions[i].equals(Manifest.permission.CAMERA))
+        {
+          cameraPermission = grantResults[i];
+        }
+      }
+
+      final boolean permissionsGranted = writePermission == PackageManager.PERMISSION_GRANTED &&
+          cameraPermission == PackageManager.PERMISSION_GRANTED;
+
       if (!permissionsGranted)
       {
-        Activity activity = getActivity();
-        final Boolean shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) &&
-          ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
+        final Boolean shouldShowRationale = shouldShowRequestPermissionRationale(
+          getActivity(), writePermission, cameraPermission);
 
         // User denied the permission, allow the app to show it again later.
         if (shouldShowRationale) {
@@ -113,19 +123,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
           return false;
         }
 
-        // User selected don't ask again checkbox, so dialog to redirect user to the app permissions settings.
-        final AlertDialog dialog = PermissionUtils.explainingDialog(ImagePickerModule.this, options, true, new PermissionUtils.OnExplainingPermissionCallback()
-          {
+        // User selected don't ask again checkbox, show dialog to redirect user to the app permissions settings.
+        final AlertDialog dialog = PermissionUtils.explainingDialog(
+          ImagePickerModule.this, options, true, new PermissionUtils.OnExplainingPermissionCallback() {
             @Override
             public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
                                   DialogInterface dialogInterface)
             {
-              final ImagePickerModule module = moduleInstance.get();
-              if (module == null)
-              {
-                return;
-              }
-              module.doOnCancel();
+              responseHelper.invokeError(callback, "Permissions weren't granted");
             }
 
             @Override
@@ -587,6 +592,33 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     putExtraFileInfo(path, responseHelper);
   }
 
+  private boolean shouldShowRequestPermissionRationale(@NonNull final Activity activity,
+                                                        @NonNull final int writePermission,
+                                                        @NonNull final int cameraPermission)
+  {
+    Boolean shouldShowRationale = false;
+
+    if (writePermission == PackageManager.PERMISSION_DENIED &&
+        cameraPermission == PackageManager.PERMISSION_DENIED)
+    {
+      shouldShowRationale = ActivityCompat.
+        shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) &&
+        ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
+    }
+    else if (writePermission == PackageManager.PERMISSION_DENIED)
+    {
+      shouldShowRationale = ActivityCompat.
+        shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    }
+    else if (cameraPermission == PackageManager.PERMISSION_DENIED)
+    {
+      shouldShowRationale = ActivityCompat.
+        shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
+    }
+
+    return shouldShowRationale;
+  }
+
   private void requestCameraPermissions(@NonNull final Activity activity,
                                         @NonNull final int requestCode)
   {
@@ -634,22 +666,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       return true;
     }
 
-    final Boolean shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
-      ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
+    Boolean shouldShowRationale = shouldShowRequestPermissionRationale(activity, writePermission, cameraPermission);
 
     if (shouldShowRationale) {
-      final AlertDialog dialog = PermissionUtils.explainingDialog(this, options, new PermissionUtils.OnExplainingPermissionCallback()
-        {
+      final AlertDialog dialog = PermissionUtils.explainingDialog(
+        this, options, new PermissionUtils.OnExplainingPermissionCallback() {
           @Override
           public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
                                 DialogInterface dialogInterface)
           {
-            final ImagePickerModule module = moduleInstance.get();
-            if (module == null)
-            {
-              return;
-            }
-            module.doOnCancel();
+            responseHelper.invokeError(callback, "Permissions weren't granted");
           }
 
           @Override
